@@ -95,8 +95,8 @@ class Plugin {
     /x
     EOD;
 
-    // original pattern here below
-    //$pattern = '(\-?(\[[^"\'\s{}]+\]|([a-z]([\w\.\/])*))((\-|:)(\[[^"\'\s{}]+\]|(\w[\w\.\/]*)))*)';
+    // original pattern here below (could be replaced by the pattern above, but it doesn't work?)
+    $pattern = '(\-?(\[[^"\'\s{}]+\]|([a-z]([\w\.\/])*))((\-|:)(\[[^"\'\s{}]+\]|(\w[\w\.\/]*)))*)';
 	  
     // print list of files
     // file_put_contents(WP_PLUGIN_DIR . '/tailwind10f/filelist.txt', implode("\n", $files));
