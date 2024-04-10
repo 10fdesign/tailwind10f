@@ -73,6 +73,28 @@ class Plugin {
     $theme = wp_get_theme();
     $files = $theme->get_files(['js'], -1);
     // $pattern = '(((\-|:)?(\[.*\]|\w+))+)'; // initial version
+
+    $pattern = <<<EOD
+    /
+      (                       # entire pattern is captured
+        \-?                   # optional '-' prefix, as in -z-10
+        (                     # _required_ main word:
+          \[[^"\'\s{}]+\]     #   anything but "'\s{} inside square brackets,
+          |                   #   OR
+          ([a-z]([\w\.\/])*)  #   a letter followed by word characters/periods/slashes
+        )
+        (                     # any number of follow up sequences:
+          (\-|:)              #   must have a - or : as a separator, as in [&>div]:flex or m-0
+          (                   #   follow up word:
+            \[[^"\'\s{}]+\]   #     anything but "'\s{} inside square brackets,
+            |                 #     OR
+            (\w[\w\.\/]*)     #     at least \w with any number of \w or \. or slashes
+          )
+        )*
+      )
+    /x
+    EOD;
+
     $pattern = '(\-?(\[[^"\'\s{}]+\]|([a-z]([\w\.\/])*))((\-|:)(\[[^"\'\s{}]+\]|(\w[\w\.\/]*)))*)';
     // print list of files
     // file_put_contents(WP_PLUGIN_DIR . '/tailwind10f/filelist.txt', implode("\n", $files));
