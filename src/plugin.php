@@ -4,8 +4,10 @@ namespace Tailwind10F;
 
 
 define('TAILWIND10F_STYLESHEET', WP_PLUGIN_DIR . '/tailwind10f/tailwind10f.css');
+define('TAILWIND10F_ADMIN_STYLESHEET', WP_PLUGIN_DIR . '/tailwind10f/tailwind10f_admin.css');
 define('TAILWIND10F_CACHED_CLASS_LIST', WP_PLUGIN_DIR . '/tailwind10f/tailwind_classes.txt');
 define('TAILWIND10F_CONFIG_FILE', get_stylesheet_directory() . '/tailwind_config.json');
+define('TAILWIND10F_FILE_LIST', get_stylesheet_directory() . '/tailwind_files.json');
 
 class Plugin {
 
@@ -53,25 +55,65 @@ class Plugin {
     add_action( 'wp_enqueue_scripts', function() {
       wp_enqueue_style('tailwind10f-css', TAILWIND10F_URL . 'tailwind10f.css', array(), $this->version());
     });
+
+    // add_action( 'admin_enqueue_scripts', function () {
+    // 	wp_enqueue_style('tailwind10f-admin-css', TAILWIND10F_URL . 'tailwind10f_admin.css', array(), $this->version());
+    // });
   }
 
   private function get_classes_from_html($buffer) {
+    $without_newlines = preg_replace('/[\r\n]/', '', $buffer);
     $re = '/class="([^"]+)"/';
-	  preg_match_all($re, $buffer, $matches, PREG_SET_ORDER, 0);
+	  preg_match_all($re, $without_newlines, $matches, PREG_SET_ORDER, 0);
 	  $classes = array_values(array_unique(
-	      $this->array_flatten(array_map(function ($m) {
-	          return explode(' ', strtolower($m[1]));
-	      }, $matches))
+      $this->array_flatten(array_map(function ($m) {
+        return preg_split('/\s+/', strtolower($m[1]));
+      }, $matches))
 	  ));
+    $classes = array_filter($classes, [$this, 'classname_has_valid_parentheses']);
 	  asort($classes);
     return $classes;
+  }
+
+  // returns true if a classname (string) has matching parentheses
+  private function classname_has_valid_parentheses($classname) {
+    $remainder = $classname;
+    // strip out matching parentheses until none are remaining
+    while ($remainder != ($replaced = preg_replace('/\([^\(\)]*\)/', '', $remainder))) {
+      $remainder = $replaced;
+    }
+    // if the remainder has any leftover parentheses, it is not valid
+    // ---
+    // preg_match() returns 1 if the pattern matches given subject,
+    // 0 if it does not, or false on failure.
+    $result = preg_match('/[\(\)]/', $remainder);
+    if ($result == 1 || $result === false) {
+      return false;
+    }
+    return true;
   }
 
   private function get_classes_from_js() {
     $words = [];
     // get theme (js) files
-    $theme = wp_get_theme();
-    $files = $theme->get_files(['js'], -1);
+    // $theme = wp_get_theme();
+    // $files = $theme->get_files(['js'], -1);
+
+    // NEW METHOD: only scan files in /js/ directory
+    $files = glob( get_stylesheet_directory() . "/js/*" );
+
+    // add files from manual list of files
+    if ( file_exists( TAILWIND10F_FILE_LIST ) ) {
+	  	$extra_files = json_decode(
+	       file_get_contents( TAILWIND10F_FILE_LIST ) ?? '{}'
+	    );
+  	} else {
+  		$extra_files = [];
+  	}
+  	foreach( $extra_files as $extra_file ) {
+  		array_push( $files, get_stylesheet_directory() . '/' . $extra_file );
+  	}
+
     // $pattern = '(((\-|:)?(\[.*\]|\w+))+)'; // initial version
 
     $pattern = <<<EOD
@@ -95,9 +137,9 @@ class Plugin {
     /x
     EOD;
 
-    // original pattern here below (could be replaced by the pattern above, but it doesn't work?)
+    // original pattern here below
     $pattern = '(\-?(\[[^"\'\s{}]+\]|([a-z]([\w\.\/])*))((\-|:)(\[[^"\'\s{}]+\]|(\w[\w\.\/]*)))*)';
-	  
+
     // print list of files
     // file_put_contents(WP_PLUGIN_DIR . '/tailwind10f/filelist.txt', implode("\n", $files));
     // for each theme file:
@@ -159,6 +201,7 @@ class Plugin {
   private function write_css($css) {
     // TODO: Error handling
 	  file_put_contents(TAILWIND10F_STYLESHEET, $css);
+	  // file_put_contents(TAILWIND10F_ADMIN_STYLESHEET, ".is-desktop-preview {\n" . $css . "\n}");
   }
 
   private function version() {
