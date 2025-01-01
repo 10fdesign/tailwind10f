@@ -9,7 +9,8 @@
  * @wordpress-plugin
  *
  * Plugin Name:    Tailwind 10F
- * Plugin URI:     n/a
+ * Plugin URI:     https://10fdesign.io/
+ * Update URI:     https://raw.githubusercontent.com/10fdesign/tailwind10f/refs/heads/main/tailwind10f.zip
  * Description:    Tailwind :)
  * Version:        0.0.1
  * Author:         10F Design
@@ -18,7 +19,7 @@
 
 require WP_PLUGIN_DIR . '/tailwind10f/src/plugin.php';
 
-define( 'TAILWIND10F_URL', plugin_dir_url( __FILE__ ) );
+define('TAILWIND10F_URL', plugin_dir_url(__FILE__ ));
 
 use Tailwind10F\Plugin;
 
