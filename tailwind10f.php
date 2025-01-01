@@ -10,7 +10,7 @@
  *
  * Plugin Name:    Tailwind 10F
  * Plugin URI:     https://10fdesign.io/
- * Update URI:     https://raw.githubusercontent.com/10fdesign/tailwind10f/refs/heads/main/tailwind10f.zip
+ * Update URI:     https://github.com/10fdesign/tailwind10f/raw/refs/heads/main/tailwind10f.zip
  * Description:    Tailwind :)
  * Version:        0.0.1
  * Author:         10F Design
