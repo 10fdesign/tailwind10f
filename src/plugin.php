@@ -17,12 +17,10 @@ class Plugin {
       ob_start(function ($buffer) {
         // parse html
         $html_classes = $this->get_classes_from_html($buffer);
+        // $html_classes = [];
 
         // parse js files (if necessary)
         $js_classes = $this->get_classes_from_js();
-
-        // debug print js classes?
-        // file_put_contents(WP_PLUGIN_DIR . '/tailwind10f/js_classes.txt', implode("\n", $js_classes));
 
         // get old classes in cached class file
         $cached_classes = $this->get_classes_from_cached_list();
@@ -33,17 +31,33 @@ class Plugin {
           $js_classes,
           $cached_classes
         ));
+
+        $combined_classes = array_filter($combined_classes, function($var) {
+          return !preg_match('/[^\x20-\x7e]/', $var);
+        });
+
 	      asort($combined_classes);
+        // $combined_classes = array_slice($combined_classes, 0, min(count($combined_classes), 25));
 
         if ( sizeof( $cached_classes ) == sizeof( $combined_classes ) ) {
         	return $buffer;
         }
 
-        // write new classes back to file
-        $this->write_cached_classes($combined_classes);
+        // debug print html classes?
+        file_put_contents(WP_PLUGIN_DIR . '/tailwind10f/html_classes.txt', implode("\n", $html_classes));
+
+        // debug print js classes?
+        file_put_contents(WP_PLUGIN_DIR . '/tailwind10f/js_classes.txt', implode("\n", $js_classes));
 
         // generate tailwind css
         $css = $this->generate_tailwind($combined_classes);
+
+        if ($css == false) { // response was not 200OK
+          return $buffer;
+        }
+
+        // write new classes back to file
+        $this->write_cached_classes($combined_classes);
 
         // save css to file
         $this->write_css($css);
@@ -194,6 +208,13 @@ class Plugin {
 	          'options' => $config,
 	      ])
 	  ]);
+
+    // if result is not 200 (OK) then we assume something has gone
+    // wrong - do not use the body as a css file
+    if ($result['response']['code'] != 200) {
+      return false;
+    }
+
 	  $css = $result['body'];
     return $css;
   }
