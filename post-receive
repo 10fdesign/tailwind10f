@@ -1,0 +1,25 @@
+#!/bin/bash
+# This file is the git hook used on the release server to assemble the zip and json files.
+
+git_path=/home/git/tailwind10f
+output_path=/var/www/html/plugins
+
+GIT_WORK_TREE=$git_path git checkout -f
+
+(
+ cd $git_path &&
+ zip --exclude .git .gitignore post-receive README.md -Jr tailwind10f.zip ./ &&
+ mv -f tailwind10f.zip $output_path/tailwind10f.zip
+)
+
+version=$(grep -e 'Version:' $git_path/tailwind10f.php | sed 's/.*Version:\s\+\([\d\.]*\)/\1/')
+
+cat > $output_path/plugins-info.json <<EOD
+{
+  "tailwind10f/tailwind10f.php":{
+      "version":"$version",
+      "package":"https://api.10fdesign.io/plugins/tailwind10f.zip"
+  }
+}
+EOD
+cat $output_path/plugins-info.json
