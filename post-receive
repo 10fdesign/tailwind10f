@@ -1,14 +1,15 @@
 #!/bin/bash
 # This file is the git hook used on the release server to assemble the zip and json files.
 
+working_zip_directory=/home/git/
 git_path=/home/git/tailwind10f
 output_path=/var/www/html/plugins
 
 GIT_WORK_TREE=$git_path git checkout -f
 
 (
- cd $git_path &&
- zip --exclude .git .gitignore post-receive README.md -Jr tailwind10f.zip ./ &&
+ cd $working_zip_directory &&
+ zip --exclude .git .gitignore post-receive README.md -r tailwind10f.zip tailwind10f/ &&
  mv -f tailwind10f.zip $output_path/tailwind10f.zip
 )
 
