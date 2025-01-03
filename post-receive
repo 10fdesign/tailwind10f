@@ -4,12 +4,13 @@
 working_zip_directory=/home/git/
 git_path=/home/git/tailwind10f
 output_path=/var/www/html/plugins
+excluded_in_zip_file="tailwind10f/.git tailwind10f/.gitignore tailwind10f/post-receive tailwind10f/README.md tailwind10f/.wp-env.json"
 
 GIT_WORK_TREE=$git_path git checkout -f
 
 (
  cd $working_zip_directory &&
- zip --exclude tailwind10f/.git tailwind10f/.gitignore tailwind10f/post-receive tailwind10f/README.md -r tailwind10f.zip tailwind10f/ &&
+ zip --exclude -r tailwind10f.zip tailwind10f/ &&
  mv -f tailwind10f.zip $output_path/tailwind10f.zip
 )
 

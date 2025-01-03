@@ -19,8 +19,6 @@
 
 require WP_PLUGIN_DIR . '/tailwind10f/src/plugin.php';
 
-define('TAILWIND10F_URL', plugin_dir_url(__FILE__));
-
 use Tailwind10F\Plugin;
 
 if(!function_exists('my_plugin_check_for_updates')) {

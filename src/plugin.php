@@ -2,19 +2,16 @@
 
 namespace Tailwind10F;
 
-
-define('TAILWIND10F_STYLESHEET', WP_PLUGIN_DIR . '/tailwind10f/tailwind10f.css');
-define('TAILWIND10F_ADMIN_STYLESHEET', WP_PLUGIN_DIR . '/tailwind10f/tailwind10f_admin.css');
-define('TAILWIND10F_CACHED_CLASS_LIST', WP_PLUGIN_DIR . '/tailwind10f/tailwind_classes.txt');
-define('TAILWIND10F_CONFIG_FILE', get_stylesheet_directory() . '/tailwind_config.json');
-define('TAILWIND10F_FILE_LIST', get_stylesheet_directory() . '/tailwind_files.json');
-
 class Plugin {
 
   public function create_actions() {
 
     add_action('template_redirect', function() {
       ob_start(function ($buffer) {
+
+        // create our directory inside wp-content/uploads
+        wp_mkdir_p(Plugin::uploads_folder_path());
+
         // parse html
         $html_classes = $this->get_classes_from_html($buffer);
         // $html_classes = [];
@@ -37,17 +34,17 @@ class Plugin {
         });
 
 	      asort($combined_classes);
-        // $combined_classes = array_slice($combined_classes, 0, min(count($combined_classes), 25));
 
+        // TODO: smarter detection of new classes
         if ( sizeof( $cached_classes ) == sizeof( $combined_classes ) ) {
         	return $buffer;
         }
 
         // debug print html classes?
-        file_put_contents(WP_PLUGIN_DIR . '/tailwind10f/html_classes.txt', implode("\n", $html_classes));
+        file_put_contents(Plugin::uploads_folder_path() . '/html_classes.txt', implode("\n", $html_classes));
 
         // debug print js classes?
-        file_put_contents(WP_PLUGIN_DIR . '/tailwind10f/js_classes.txt', implode("\n", $js_classes));
+        file_put_contents(Plugin::uploads_folder_path() . '/js_classes.txt', implode("\n", $js_classes));
 
         // generate tailwind css
         $css = $this->generate_tailwind($combined_classes);
@@ -67,12 +64,14 @@ class Plugin {
     }, 10);
 
     add_action( 'wp_enqueue_scripts', function() {
-      wp_enqueue_style('tailwind10f-css', TAILWIND10F_URL . 'tailwind10f.css', array(), $this->version());
+      wp_enqueue_style('tailwind10f-css', Plugin::stylesheet_url(), array(), $this->version());
     });
 
+    // TODO: Admin styles?
     // add_action( 'admin_enqueue_scripts', function () {
-    // 	wp_enqueue_style('tailwind10f-admin-css', TAILWIND10F_URL . 'tailwind10f_admin.css', array(), $this->version());
+    // 	wp_enqueue_style('tailwind10f-admin-css', Plugin::uploads_folder_path() . '/tailwind10f_admin.css', array(), $this->version());
     // });
+
   }
 
   private function get_classes_from_html($buffer) {
@@ -117,9 +116,9 @@ class Plugin {
     $files = glob( get_stylesheet_directory() . "/js/*" );
 
     // add files from manual list of files
-    if ( file_exists( TAILWIND10F_FILE_LIST ) ) {
+    if ( file_exists( Plugin::file_list() ) ) {
 	  	$extra_files = json_decode(
-	       file_get_contents( TAILWIND10F_FILE_LIST ) ?? '{}'
+	       file_get_contents( Plugin::file_list() ) ?? '{}'
 	    );
   	} else {
   		$extra_files = [];
@@ -180,7 +179,7 @@ class Plugin {
   }
 
   private function get_classes_from_cached_list() {
-  	$class_file_contents = file_get_contents(TAILWIND10F_CACHED_CLASS_LIST);
+  	$class_file_contents = file_get_contents(plugin::cached_class_path());
   	if ( $class_file_contents != false ) {
   		$existing_class_list = explode("\n", $class_file_contents);
       return $existing_class_list;
@@ -189,13 +188,13 @@ class Plugin {
   }
 
   private function write_cached_classes($combined_classes) {
-    file_put_contents(TAILWIND10F_CACHED_CLASS_LIST, implode("\n", $combined_classes));
+    file_put_contents(Plugin::cached_class_path(), implode("\n", $combined_classes));
   }
 
   private function generate_tailwind($classes) {
-  	if ( file_exists( TAILWIND10F_CONFIG_FILE ) ) {
+  	if (file_exists(Plugin::config_path())) {
 	  	$config = json_decode(
-	       file_get_contents( TAILWIND10F_CONFIG_FILE ) ?? '{}'
+	       file_get_contents(Plugin::config_path()) ?? '{}'
 	    );
   	} else {
   		$config = [];
@@ -221,12 +220,40 @@ class Plugin {
 
   private function write_css($css) {
     // TODO: Error handling
-	  file_put_contents(TAILWIND10F_STYLESHEET, $css);
+	  file_put_contents(Plugin::stylesheet_path(), $css);
 	  // file_put_contents(TAILWIND10F_ADMIN_STYLESHEET, ".is-desktop-preview {\n" . $css . "\n}");
   }
 
   private function version() {
     return time();
+  }
+
+  protected static function uploads_folder_path() {
+    return trailingslashit( wp_upload_dir()['basedir'] ) . 'tailwind10f';
+  }
+
+  protected static function uploads_folder_url() {
+    return trailingslashit( wp_upload_dir()['baseurl'] ) . 'tailwind10f';
+  }
+
+  protected static function cached_class_path() {
+    return Plugin::uploads_folder_path() . '/tailwind_classes.txt';
+  }
+
+  protected static function stylesheet_path() {
+    return Plugin::uploads_folder_path() . '/tailwind10f.css';
+  }
+
+  protected static function stylesheet_url() {
+    return Plugin::uploads_folder_url() . '/tailwind10f.css';
+  }
+
+  protected static function config_path() {
+    return get_stylesheet_directory() . '/tailwind_config.json';
+  }
+
+  protected static function file_list() {
+    return get_stylesheet_directory() . '/tailwind_files.json';
   }
 
   private function array_flatten($array = null)
