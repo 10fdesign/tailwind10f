@@ -10,7 +10,7 @@ GIT_WORK_TREE=$git_path git checkout -f
 
 (
  cd $working_zip_directory &&
- zip --exclude -r tailwind10f.zip tailwind10f/ &&
+ zip --exclude $excluded_in_zip_file -r tailwind10f.zip tailwind10f/ &&
  mv -f tailwind10f.zip $output_path/tailwind10f.zip
 )
 
