@@ -36,7 +36,7 @@ class Plugin {
 	      asort($combined_classes);
 
         // TODO: smarter detection of new classes
-        if ( false && sizeof( $cached_classes ) == sizeof( $combined_classes ) ) {
+        if ( sizeof( $cached_classes ) == sizeof( $combined_classes ) ) {
         	return $buffer;
         }
 
@@ -205,11 +205,27 @@ class Plugin {
     # local test url, with docker
     $address = 'http://host.docker.internal:4567/api/v1/tailwind3';
 
+
+    // file_put_contents(Plugin::uploads_folder_path() . '/css_imploded.txt', implode(' ', $classes));
+
+    $json = json_encode([
+      'classes' => implode(' ', $classes),
+      'options' => $config,
+    ]);
+
+
     # live url
     $address = 'https://api.10fdesign.io/api/v1/tailwind3';
+
+    $imploded_classes = implode(' ', $classes);
+    $imploded_classes = urlencode($imploded_classes);
+    // $imploded_classes = preg_replace('/%/', '_PERCENT_', $imploded_classes);
+
+    file_put_contents(Plugin::uploads_folder_path() . '/css_imploded_replaced.txt', $imploded_classes);
+
     $result = $req->post($address, [
       'body' => json_encode([
-          'classes' => implode(' ', $classes),
+          'classes' => $imploded_classes,
           'options' => $config,
       ])
   ]);
