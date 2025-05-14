@@ -36,7 +36,7 @@ class Plugin {
 	      asort($combined_classes);
 
         // TODO: smarter detection of new classes
-        if ( sizeof( $cached_classes ) == sizeof( $combined_classes ) ) {
+        if ( false && sizeof( $cached_classes ) == sizeof( $combined_classes ) ) {
         	return $buffer;
         }
 
@@ -201,20 +201,32 @@ class Plugin {
   	}
 
 	  $req = new \WP_Http();
-	  $result = $req->post('https://tailwind.restedapi.com/api/v1', [
-	      'body' => json_encode([
-	          'text' => implode(' ', $classes),
-	          'options' => $config,
-	      ])
-	  ]);
+
+    # local test url, with docker
+    $address = 'http://host.docker.internal:4567/api/v1/tailwind3';
+
+    # live url
+    $address = 'https://api.10fdesign.io/api/v1/tailwind3';
+    $result = $req->post($address, [
+      'body' => json_encode([
+          'classes' => implode(' ', $classes),
+          'options' => $config,
+      ])
+  ]);
+
+    if (is_wp_error($result)) {
+      // log error or something here
+      return false;
+    }
 
     // if result is not 200 (OK) then we assume something has gone
     // wrong - do not use the body as a css file
     if ($result['response']['code'] != 200) {
       return false;
     }
+    $body = json_decode($result['body']);
 
-	  $css = $result['body'];
+	  $css = $body->output;
     return $css;
   }
 
