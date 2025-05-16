@@ -12,7 +12,7 @@
  * Plugin URI:     https://10fdesign.io/
  * Update URI:     https://api.10fdesign.io/plugins/plugins-info.json
  * Description:    Tailwind :)
- * Version:        0.4.2
+ * Version:        0.4.3
  * Author:         10F Design
  * Author URI:     https://10fdesign.io
  */
