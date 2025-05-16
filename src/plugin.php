@@ -35,9 +35,14 @@ class Plugin {
 
 	      asort($combined_classes);
 
-        // TODO: smarter detection of new classes
-        if ( sizeof( $cached_classes ) == sizeof( $combined_classes ) ) {
-        	return $buffer;
+        $env = wp_get_environment_type();
+        $skip_class_check = in_array($env, ['local']);
+
+        if (!$skip_class_check) {
+          // TODO: smarter detection of new classes
+          if ( sizeof( $cached_classes ) == sizeof( $combined_classes ) ) {
+            return $buffer;
+          }
         }
 
         // debug print html classes?
@@ -202,31 +207,42 @@ class Plugin {
 
 	  $req = new \WP_Http();
 
-    # local test url, with docker
-    $address = 'http://host.docker.internal:4567/api/v1/tailwind3';
-
-
-    // file_put_contents(Plugin::uploads_folder_path() . '/css_imploded.txt', implode(' ', $classes));
+    switch (wp_get_environment_type()) {
+      case 'local':
+        # local test url, with docker
+        $address = 'http://host.docker.internal:4567/api/v1/tailwind3';
+        break;
+      case 'development':
+      case 'staging':
+      case 'production':
+      default:
+        # production API url
+        $address = 'https://api.10fdesign.io/api/v1/tailwind3';
+        break;
+    }
 
     $json = json_encode([
       'classes' => implode(' ', $classes),
       'options' => $config,
     ]);
 
-
-    # live url
-    $address = 'https://api.10fdesign.io/api/v1/tailwind3';
-
     $imploded_classes = implode(' ', $classes);
-    $imploded_classes = urlencode($imploded_classes);
-    // $imploded_classes = preg_replace('/%/', '_PERCENT_', $imploded_classes);
+    $config = json_encode($config);
+
+    $encoded_config = [];
+    $debug = var_export($config);
+    file_put_contents(Plugin::uploads_folder_path() . '/wp_get_environment_type.txt', wp_get_environment_type());
+    // file_put_contents(Plugin::uploads_folder_path() . '/encoded_config.txt', $debug);
+    $encoded_config = urlencode($config);
+    // if (!empty($config)) {
+    // }
 
     file_put_contents(Plugin::uploads_folder_path() . '/css_imploded_replaced.txt', $imploded_classes);
 
     $result = $req->post($address, [
       'body' => json_encode([
-          'classes' => $imploded_classes,
-          'options' => $config,
+          'classes' => urlencode($imploded_classes),
+          'options' => urlencode($config),
       ])
   ]);
 
