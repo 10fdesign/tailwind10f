@@ -73,7 +73,7 @@ class Plugin {
 
     $options = get_option( 'tailwind10f_options' );
     if (!empty($options) && is_array($options) && array_key_exists('tailwind10f_stylesheet_priority', $options) ) {
-      $css_priority = $options['tailwind10f_stylesheet_priority'];
+      $css_priority = intval($options['tailwind10f_stylesheet_priority']);
     }
 
     add_action( 'wp_enqueue_scripts', function() {
