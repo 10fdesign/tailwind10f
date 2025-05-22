@@ -68,9 +68,17 @@ class Plugin {
       });
     }, 10);
 
+    // the priority of the css enqueue callback - can be overriddden to go before/after base styles
+    $css_priority = 10;
+
+    $options = get_option( 'tailwind10f_options' );
+    if (!empty($options) && is_array($options) && array_key_exists('tailwind10f_stylesheet_priority', $options) ) {
+      $css_priority = $options['tailwind10f_stylesheet_priority'];
+    }
+
     add_action( 'wp_enqueue_scripts', function() {
       wp_enqueue_style('tailwind10f-css', Plugin::stylesheet_url(), array(), $this->version());
-    });
+    }, $css_priority);
 
     // TODO: Admin styles?
     // add_action( 'admin_enqueue_scripts', function () {
@@ -231,7 +239,6 @@ class Plugin {
 
     $encoded_config = [];
     $debug = var_export($config);
-    file_put_contents(Plugin::uploads_folder_path() . '/wp_get_environment_type.txt', wp_get_environment_type());
     // file_put_contents(Plugin::uploads_folder_path() . '/encoded_config.txt', $debug);
     $encoded_config = urlencode($config);
     // if (!empty($config)) {
