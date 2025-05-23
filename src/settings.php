@@ -133,7 +133,7 @@ class Settings {
       </option>
     </select>
     <p class="description">
-      <?php esc_html_e( 'Select your desired Tailwind version. 4.x Coming soon!', 'tailwind10f' ); ?>
+      <?php esc_html_e( '4.x coming soon!', 'tailwind10f' ); ?>
     </p>
     <?php
   }
@@ -148,9 +148,6 @@ class Settings {
         default="10"
         value="<?php echo isset( $options[ $args['label_for'] ] ) ? $options[ $args['label_for'] ] : '10'; ?>"
         name="tailwind10f_options[<?php echo esc_attr( $args['label_for'] ); ?>]">
-    <p class="description">
-      <?php esc_html_e( 'Set the tailwind stylesheet priority here.', 'tailwind10f' ); ?>
-    </p>
     <?php
   }
 

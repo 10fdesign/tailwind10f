@@ -192,16 +192,15 @@ class Plugin {
   }
 
   private function get_classes_from_cached_list() {
-  	$class_file_contents = file_get_contents(plugin::cached_class_path());
-  	if ( $class_file_contents != false ) {
-  		$existing_class_list = explode("\n", $class_file_contents);
-      return $existing_class_list;
-  	}
-    return [];
+    $cache = get_option('tailwind10f_class_cache', '');
+    $classes = explode("\n", $cache);
+    return $classes;
   }
 
   private function write_cached_classes($combined_classes) {
-    file_put_contents(Plugin::cached_class_path(), implode("\n", $combined_classes));
+    $cache = implode("\n", $combined_classes);
+    update_option('tailwind10f_class_cache', $cache);
+    return;
   }
 
   private function generate_tailwind($classes) {
