@@ -132,9 +132,6 @@ class Plugin {
       $config = $settings['tailwind10f_tailwind4_config'] ?? false;
     }
 
-    $debug = var_export($config, true);
-    file_put_contents(TAILWIND10F_DIR . '/config.txt', $debug);
-
     if ($config == NULL) {
       $event['status'] .= 'Aborted (invalid config)';
       $event['color'] = 'yellow';
