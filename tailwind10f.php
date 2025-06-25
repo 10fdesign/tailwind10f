@@ -12,44 +12,20 @@
  * Plugin URI:     https://10fdesign.io/
  * Update URI:     https://api.10fdesign.io/plugins/plugins-info.json
  * Description:    Tailwind :)
- * Version:        0.4.3
+ * Version:        0.4.4
  * Author:         10F Design
  * Author URI:     https://10fdesign.io
  */
 
-require_once WP_PLUGIN_DIR . '/tailwind10f/src/plugin.php';
-require_once WP_PLUGIN_DIR . '/tailwind10f/src/settings.php';
+namespace Tailwind10F;
 
-use Tailwind10F\Plugin;
-use Tailwind10F\Settings;
+define("Tailwind10F\TAILWIND10F_DIR", WP_PLUGIN_DIR . '/tailwind10f');
+define("Tailwind10F\TAILWIND10F_URL", plugin_dir_url(__FILE__));
 
-if(!function_exists('my_plugin_check_for_updates')) {
+require_once TAILWIND10F_DIR . '/src/plugin.php';
+require_once TAILWIND10F_DIR . '/src/settings.php';
+require_once TAILWIND10F_DIR . '/src/update.php';
 
-  function my_plugin_check_for_updates($update, $plugin_data, $plugin_file) {
-
-      static $response = false;
-
-      if( empty( $plugin_data['UpdateURI'] ) || ! empty($update) )
-          return $update;
-
-      if($response === false)
-          $response = wp_remote_get( $plugin_data['UpdateURI'] );
-
-      if( empty( $response['body'] ) )
-          return $update;
-
-      $custom_plugins_data = json_decode( $response['body'], true );
-
-      if( ! empty( $custom_plugins_data[ $plugin_file ] ) )
-          return $custom_plugins_data[ $plugin_file ];
-      else
-          return $update;
-
-  }
-
-  add_filter('update_plugins_api.10fdesign.io', 'my_plugin_check_for_updates', 10, 3);
-
-}
-
+Settings::init();
+Update::init();
 (new Plugin())->create_actions();
-(new Settings())->init();

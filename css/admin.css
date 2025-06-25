@@ -1,0 +1,119 @@
+.tailwind10f-history {
+  tailwind10f-table {
+    display: grid;
+    gap: 1px 0;
+    background: #ccc;
+  }
+
+  tailwind10f-table {
+    background: #f2f2f2;
+  }
+
+  tailwind10f-tr[data-color="blue"] {
+    background: #eef;
+  }
+
+  tailwind10f-tr[data-color="yellow"] {
+    background: #fffeee;
+  }
+
+  tailwind10f-tr[data-color="red"] {
+    background: #fee;
+  }
+
+  tailwind10f-th,
+  tailwind10f-td {
+    padding: 0.5em;
+    min-width: min(5vw, 10ch);
+    word-wrap:break-word;
+  }
+
+  tailwind10f-tr {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+
+  tailwind10f-th {
+    font-weight: bold;
+    text-transform: capitalize;
+  }
+
+  tailwind10f-table details {
+    margin-left: 1ch;
+  }
+
+  .tailwind10f-new-css-class {
+    font-family: monospace;
+    background-color: #ded;
+    padding: 1px 3px;
+    text-wrap: nowrap;
+    border-radius: 3px;
+    border: 1px solid #cdc;
+    margin: 4px;
+    box-sizing: content-box;
+    display: inline-block;
+    color: #062;
+  }
+}
+
+summary.tailwind10f-summary {
+  cursor: pointer;
+}
+
+.tailwind10f-invalid-pattern {
+  font-family: monospace;
+  background-color: #edd;
+  padding: 1px 3px;
+  text-wrap: nowrap;
+  border-radius: 3px;
+  border: 1px solid #cdc;
+  margin: 4px;
+  box-sizing: content-box;
+  display: inline-block;
+  color: #062;
+}
+
+.example-pattern {
+  font-family: monospace;
+  background-color: #ded;
+  padding: 1px 3px;
+  text-wrap: nowrap;
+  border-radius: 3px;
+  border: 1px solid #cdc;
+  margin: 4px;
+  box-sizing: content-box;
+  display: inline-block;
+  color: #062;
+}
+
+.tailwind10f-ace-input {
+  display: none !important;
+}
+
+.ace_editor {
+  max-width: 600px;
+  border-radius: 4px;
+}
+
+.tailwind10f-cache-list {
+  background: white;
+  border-radius: 4px;
+}
+
+.tailwind10f-cached-class {
+  font-family: monospace;
+  background-color: #caffca;
+  padding: 1px 4px;
+  text-wrap: nowrap;
+  border-radius: 5px;
+  border: 1px solid #81f181;
+  margin: 4px;
+  box-sizing: content-box;
+  display: inline-block;
+  color: #00832c;
+}
+
+#tailwind10f_clear_cache {
+  margin-bottom: 1em;
+}

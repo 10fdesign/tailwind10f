@@ -2,76 +2,109 @@
 
 namespace Tailwind10F;
 
+require_once TAILWIND10F_DIR . '/src/plugin.php';
+require_once TAILWIND10F_DIR . '/src/css_filter.php';
+require_once TAILWIND10F_DIR . '/src/settings/api_endpoint.php';
+require_once TAILWIND10F_DIR . '/src/settings/blacklist.php';
+require_once TAILWIND10F_DIR . '/src/settings/cache.php';
+require_once TAILWIND10F_DIR . '/src/settings/freeze_stylesheet.php';
+require_once TAILWIND10F_DIR . '/src/settings/history.php';
+require_once TAILWIND10F_DIR . '/src/settings/priority.php';
+require_once TAILWIND10F_DIR . '/src/settings/tailwind3config.php';
+require_once TAILWIND10F_DIR . '/src/settings/tailwind4config.php';
+require_once TAILWIND10F_DIR . '/src/settings/version.php';
+
 class Settings {
 
   public static function init() {
-    // Register a new setting for "tailwind10f" page.
     register_setting( 'tailwind10f', 'tailwind10f_options' );
-
-    // Register our tailwind10f options_page to the admin_menu action hook.
-    add_action( 'admin_menu', 'Tailwind10F\Settings::options_page' );
-
+    add_action('admin_menu', 'Tailwind10F\Settings::admin_menu');
     add_action('admin_init', 'Tailwind10F\Settings::admin_init');
+    add_action('admin_enqueue_scripts', 'Tailwind10F\Settings::admin_enqueue_scripts');
+    add_action('add_option_tailwind10f_options', 'Tailwind10F\Settings::options_updated');
+    add_action('update_option_tailwind10f_options', 'Tailwind10F\Settings::options_updated');
+
+    add_action('wp_ajax_tailwind10f_clear_cache', 'Tailwind10F\Settings::clear_css_cache');
+    add_action('wp_ajax_tailwind10f_force_api_call', 'Tailwind10F\Settings::tailwind10f_force_api_call');
   }
 
-  public static function admin_init() {
-    // Register a new section in the "tailwind10f" page.
-    add_settings_section(
-      'tailwind10f_section_developers',
-      __( 'Tailwind configuration', 'tailwind10f' ), 'Tailwind10F\Settings::tailwind10f_section_developers_callback',
-      'tailwind10f'
-    );
-
-    // Register a new field in the "tailwind10f_section_developers" section, inside the "tailwind10f" page.
-    add_settings_field(
-      'tailwind10f_version', // As of WP 4.6 this value is used only internally.
-                              // Use $args' label_for to populate the id inside the callback.
-        __( 'Tailwind Version', 'tailwind10f' ),
-      'Tailwind10F\Settings::tailwind_version',
-      'tailwind10f',
-      'tailwind10f_section_developers',
-      array(
-        'label_for'         => 'tailwind10f_version',
-        'class'             => 'tailwind10f_row',
-        'tailwind10f_custom_data' => 'custom',
-      )
-    );
-
-    // Register a new field in the "tailwind10f_section_developers" section, inside the "tailwind10f" page.
-    add_settings_field(
-      'tailwind10f_stylesheet_priority', // As of WP 4.6 this value is used only internally.
-                              // Use $args' label_for to populate the id inside the callback.
-        __( 'Tailwind Stylesheet Priority', 'tailwind10f' ),
-      'Tailwind10F\Settings::tailwind10f_stylesheet_priority',
-      'tailwind10f',
-      'tailwind10f_section_developers',
-      array(
-        'label_for'         => 'tailwind10f_stylesheet_priority',
-        'class'             => 'tailwind10f_row',
-        'tailwind10f_custom_data' => 'custom',
-      )
-    );
-  }
-
-  /**
-   * Add the top level menu page.
-   */
-  public static function options_page() {
+  // Add the top level menu page.
+  public static function admin_menu() {
     add_submenu_page(
       'tools.php',
       'Tailwind 10F',
       'Tailwind 10F',
       'manage_options',
       'tailwind10f',
-      'Tailwind10F\Settings::options_page_html'
+      'Tailwind10F\Settings::settings_page'
     );
   }
 
+  // admin_init hook
+  public static function admin_init($suffix) {
+    add_settings_section(
+      'tailwind10f_section_config',                  // id
+      __( 'Tailwind Configuration', 'tailwind10f' ), // title
+      NULL,                                          // callback
+      'tailwind10f',                                 // page
+      []                                             // args
+    );
 
-  /**
-   * Top level menu callback function
-   */
-  public static function options_page_html() {
+    Version::register_settings();
+    APIEndpoint::register_settings();
+    Tailwind3Config::register_settings();
+    Tailwind4Config::register_settings();
+    Priority::register_settings();
+    Blacklist::register_settings();
+    Cache::register_settings();
+    History::register_settings();
+    FreezeStylesheet::register_settings();
+  }
+
+  // admin_enqueue_scripts hook
+  public static function admin_enqueue_scripts() {
+    wp_enqueue_script(
+      'tailwind10f-ace',
+      TAILWIND10F_URL . '/ace-builds/src-min-noconflict/ace.js',
+      []
+    );
+
+    wp_enqueue_script(
+      'tailwind10f-settings',
+      TAILWIND10F_URL . '/js/settings.js',
+      [],
+      '1.0',
+      true
+    );
+
+    wp_enqueue_style(
+      'tailwind10f-admin',
+      TAILWIND10F_URL . '/css/admin.css',
+      []
+    );
+  }
+
+  public static function options_updated($value) {
+    $debug = var_export($value, true);
+    update_option('tailwind10f_settings_updated_time', time());
+  }
+
+  public static function clear_css_cache($request) {
+    update_option('tailwind10f_class_cache', '');
+    return array(
+      "success" => false
+    );
+  }
+
+  public static function tailwind10f_force_api_call($request) {
+    Plugin::perform_build('', true);
+    return array(
+      "success" => true
+    );
+  }
+
+  // Settings page html callback
+  public static function settings_page() {
     // check user capabilities
     if ( ! current_user_can( 'manage_options' ) ) {
       return;
@@ -82,7 +115,7 @@ class Settings {
     // WordPress will add the "settings-updated" $_GET parameter to the url
     if ( isset( $_GET['settings-updated'] ) ) {
       // add settings saved message with the class of "updated"
-      add_settings_error( 'tailwind10f_messages', 'tailwind10f_message', __( 'Settings Saved', 'tailwind10f' ), 'updated' );
+      add_settings_error( 'tailwind10f_messages', 'tailwind10f_message', __( 'Settings saved.', 'tailwind10f' ), 'updated' );
     }
 
     // show error/update messages
@@ -90,6 +123,44 @@ class Settings {
     ?>
     <div class="wrap">
       <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+
+      <?php
+        $tabs = [
+          'config' => 'Configuration',
+          'cache' => 'Cache',
+          'history' => 'History',
+        ];
+        $current_tab = 'config'; // default open tab
+        if (isset($_GET['tab']) && array_key_exists($_GET['tab'], $tabs)) {
+          $current_tab = $_GET['tab'];
+        }
+
+        echo '<h2 class="nav-tab-wrapper">';
+        foreach( $tabs as $tab => $name ){
+            $x = ( $tab == $current_tab ) ? ' nav-tab-active' : '';
+            echo "<a class='nav-tab$x' href='?page=tailwind10f&tab=$tab'>$name</a>";
+
+        }
+        echo '</h2>';
+        switch ($current_tab) {
+          default:
+          case 'config':
+            Settings::config_page();
+            break;
+          case 'cache':
+            Settings::cache_page();
+            break;
+          case 'history':
+            Settings::history_page();
+            break;
+        }
+      ?>
+    </div>
+    <?php
+  }
+
+  public static function config_page() {
+    ?>
       <form action="options.php" method="post">
         <?php
         // output security fields for the registered setting "tailwind10f"
@@ -101,54 +172,30 @@ class Settings {
         submit_button( 'Save Settings' );
         ?>
       </form>
-    </div>
     <?php
   }
 
-
-  /**
-   * Developers section callback function.
-   *
-   * @param array $args  The settings array, defining title, id, callback.
-   */
-  public static function tailwind10f_section_developers_callback( $args ) {
-    ?>
-    <p id="<?php echo esc_attr( $args['id'] ); ?>"><?php esc_html_e( 'Configure tailwind here.', 'tailwind10f' ); ?></p>
-    <?php
+  public static function cache_page() {
+    settings_fields( 'tailwind10f_cache' );
+    do_settings_sections( 'tailwind10f_cache' );
   }
 
-  // tailwind version selection
-  public static function tailwind_version($args) {
-    $options = get_option( 'tailwind10f_options' );
-    ?>
-    <select
-        id="<?php echo esc_attr( $args['label_for'] ); ?>"
-        data-custom="<?php echo esc_attr( $args['tailwind10f_custom_data'] ); ?>"
-        name="tailwind10f_options[<?php echo esc_attr( $args['label_for'] ); ?>]">
-      <option value="3" <?php echo isset( $options[ $args['label_for'] ] ) ? ( selected( $options[ $args['label_for'] ], '3', false ) ) : ( '' ); ?>>
-        <?php esc_html_e( '3', 'tailwind10f' ); ?>
-      </option>
-      <option value="4" disabled <?php echo isset( $options[ $args['label_for'] ] ) ? ( selected( $options[ $args['label_for'] ], '4', false ) ) : ( '' ); ?>>
-        <?php esc_html_e( '4', 'tailwind10f' ); ?>
-      </option>
-    </select>
-    <p class="description">
-      <?php esc_html_e( '4.x coming soon!', 'tailwind10f' ); ?>
-    </p>
-    <?php
+  public static function history_page() {
+    settings_fields( 'tailwind10f_history' );
+    do_settings_sections( 'tailwind10f_history' );
   }
 
-  public static function tailwind10f_stylesheet_priority($args) {
-    $options = get_option( 'tailwind10f_options' );
-    ?>
-    <input
-        type="number"
-        id="<?php echo esc_attr( $args['label_for'] ); ?>"
-        data-custom="<?php echo esc_attr( $args['tailwind10f_custom_data'] ); ?>"
-        default="10"
-        value="<?php echo isset( $options[ $args['label_for'] ] ) ? $options[ $args['label_for'] ] : '10'; ?>"
-        name="tailwind10f_options[<?php echo esc_attr( $args['label_for'] ); ?>]">
-    <?php
+  public static function get_settings() {
+    $options = get_option( 'tailwind10f_options', []);
+    $options = wp_parse_args($options, [
+      'tailwind10f_version' => 3,
+      'tailwind10f_stylesheet_priority' => 10,
+      'tailwind10f_freeze_stylesheet' => false,
+      'tailwind10f_custom_blacklist' => '',
+      'tailwind10f_tailwind3_config' => Tailwind3Config::DEFAULT,
+      'tailwind10f_tailwind4_config' => Tailwind4Config::DEFAULT,
+      'tailwind10f_api_endpoint' => 'live',
+    ]);
+    return $options;
   }
-
 }
