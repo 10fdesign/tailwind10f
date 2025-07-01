@@ -315,8 +315,6 @@ class Plugin {
   }
 
   private static function generate_tailwind($classes, $config, $api_url) {
-	  $req = new \WP_Http();
-
     $imploded_classes = implode(' ', $classes);
 
     $result = wp_remote_post($api_url, [
@@ -328,15 +326,9 @@ class Plugin {
       'body' => json_encode([
           'classes' => $imploded_classes,
           'options' => $config,
+          'siteURL' => site_url()
       ]),
     ]);
-
-    // $result = $req->post($address, [
-    //   'body' => json_encode([
-    //       'classes' => urlencode($imploded_classes),
-    //       'options' => urlencode($config),
-    //   ])
-    // ]);
 
     if (is_wp_error($result)) {
       // log error or something here

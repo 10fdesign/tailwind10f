@@ -4,10 +4,6 @@
 
   let versionSelect = document.querySelector("#tailwind10f_version");
 
-  console.log(config3)
-  console.log(config4)
-  console.log(versionSelect)
-
   if (config3 && config4 && versionSelect) {
     config3.style.display = 'none';
     config4.style.display = 'none';
@@ -28,6 +24,4 @@
     });
 
   }
-
-
 })();
