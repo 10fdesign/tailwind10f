@@ -318,6 +318,7 @@ class Plugin {
     $imploded_classes = implode(' ', $classes);
 
     $result = wp_remote_post($api_url, [
+      'timeout' => 5.0,
       'data_format' => 'body',
       'headers' => [
         'Accept' => 'application/json',

@@ -3,7 +3,7 @@
 namespace Tailwind10F;
 
 class Tailwind3Config {
-  const DEFAULT = '{\n}';
+  const DEFAULT = "{\n}";
   public static function register_settings() {
 
     add_settings_field(
